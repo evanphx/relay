@@ -28,6 +28,13 @@ type RedisBroker struct {
 	wg     sync.WaitGroup
 	ctx    context.Context
 	cancel func()
+
+	// The difference between the local clock and what
+	// time redis thinks it is. This is used to avoid
+	// have to sync clocks between clients and avoid
+	// asking redis for the current time constantly.
+	setTimeOffset bool
+	timeOffset    time.Duration
 }
 
 // RedisConsumer implements the Consumer interface

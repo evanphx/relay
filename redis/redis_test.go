@@ -50,6 +50,14 @@ func TestRedisBroker(t *testing.T) {
 
 	defer broker.Close()
 
+	t.Run("can calculate the time relative to redis", func(t *testing.T) {
+		cur := time.Unix(0, broker.currentTime())
+
+		assert.InDelta(t, time.Now().Sub(cur).Seconds(), 0.0, 0.1)
+		assert.True(t, broker.setTimeOffset)
+		assert.InDelta(t, broker.timeOffset.Seconds(), 0.0, 0.1)
+	})
+
 	t.Run("can publish and consume", func(t *testing.T) {
 		pub, err := broker.Publisher("test")
 		if err != nil {
