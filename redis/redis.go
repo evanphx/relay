@@ -221,6 +221,8 @@ func (i *RedisConsumer) Ack() error {
 	return nil
 }
 
+var ErrMissingTempItem = errors.New("missing item in temp list")
+
 func (i *RedisConsumer) Nack() error {
 	if !i.needAck {
 		return nil
@@ -229,13 +231,12 @@ func (i *RedisConsumer) Nack() error {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
-	data, err := i.broker.client.LPop(i.tempQueue).Bytes()
+	_, err := i.broker.client.RPopLPush(i.tempQueue, i.queue).Bytes()
 	if err != nil {
-		return err
-	}
+		if err == redis.Nil {
+			return ErrMissingTempItem
+		}
 
-	err = i.broker.client.RPush(i.queue, data).Err()
-	if err != nil {
 		return err
 	}
 
